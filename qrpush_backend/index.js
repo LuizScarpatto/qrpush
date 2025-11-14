@@ -1,24 +1,19 @@
+require('dotenv').config();
 const express = require('express');
-const db = require('./src/initDb');
+const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors());
 app.use(express.json());
 
-app.post('/api/qrcode/create', (req, res) => {
-  const { data, type } = req.body;
-  db.run(
-    'INSERT INTO qrcodes (data, type) VALUES (?, ?)',
-    [data, type],
-    function (err) {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      res.status(201).json({ id: this.lastID, data, type });
-    }
-  );
-});
+const authRoutes = require('./src/routes/authRoutes');
+const qrcodeRoutes = require('./src/routes/qrcodeRoutes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/qrcode', qrcodeRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 QRPUSH backend running on port ${PORT}`);
 });
+

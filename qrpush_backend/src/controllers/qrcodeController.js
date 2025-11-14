@@ -1,7 +1,8 @@
 const db = require('../database/db');
 
 exports.createQRCode = (req, res) => {
-  const { user_id, title, content, color, logo } = req.body;
+  const user_id = req.user.id;
+  const { title, content, color, logo } = req.body;
 
   const query = `INSERT INTO qrcodes (user_id, title, content, color, logo) VALUES (?, ?, ?, ?, ?)`;
   db.run(query, [user_id, title, content, color, logo], function (err) {
@@ -19,7 +20,7 @@ exports.getQRCode = (req, res) => {
     if (err || !qr) {
       return res.status(404).json({ error: 'QR Code not found' });
     }
-    
+
     db.run(`UPDATE qrcodes SET access_count = access_count + 1 WHERE id = ?`, [id]);
 
     res.json(qr);

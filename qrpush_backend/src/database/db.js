@@ -1,11 +1,26 @@
+const fs = require('fs');
+const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 require('dotenv').config();
 
-const dbPath = process.env.DB_PATH || './qrpush.db';
-const db = new sqlite3.Database(dbPath);
+const dbPath = process.env.DB_PATH;
 
-db.serialize(() => {
-  // usuários
+// Ensure db directory exists
+const dir = path.dirname(dbPath);
+if (!fs.existsSync(dir)) {
+  fs.mkdirSync(dir, { recursive: true });
+}
+
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('❌ Failed to connect to SQLite:', err.message);
+  } else {
+    console.log(`✅ Connected to SQLite at ${dbPath}`);
+    createTables();
+  }
+});
+
+function createTables() {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -15,7 +30,6 @@ db.serialize(() => {
     )
   `);
 
-  // QR Codes
   db.run(`
     CREATE TABLE IF NOT EXISTS qrcodes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,6 +43,6 @@ db.serialize(() => {
       FOREIGN KEY(user_id) REFERENCES users(id)
     )
   `);
-});
+}
 
 module.exports = db;
