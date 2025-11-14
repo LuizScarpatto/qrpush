@@ -8,4 +8,8 @@ router.get('/user/:user_id', authenticateToken, qrcodeController.listUserQRCodes
 
 router.get('/:id', qrcodeController.getQRCode);
 
+router.get('/:id/image', qrcodeController.getQRCodeImage);
+
+router.get('/:id/imagepng', qrcodeController.getQRCodePNG);
+
 module.exports = router;

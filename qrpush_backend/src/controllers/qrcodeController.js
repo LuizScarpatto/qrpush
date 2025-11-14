@@ -1,3 +1,4 @@
+const QRCode = require('qrcode');
 const db = require('../database/db');
 
 exports.createQRCode = (req, res) => {
@@ -24,6 +25,42 @@ exports.getQRCode = (req, res) => {
     db.run(`UPDATE qrcodes SET access_count = access_count + 1 WHERE id = ?`, [id]);
 
     res.json(qr);
+  });
+};
+
+exports.getQRCodeImage = (req, res) => {
+  const { id } = req.params;
+
+  db.get(`SELECT * FROM qrcodes WHERE id = ?`, [id], async (err, qr) => {
+    if (err || !qr) {
+      return res.status(404).json({ error: 'QR Code not found' });
+    }
+
+    try {
+      const qrImage = await QRCode.toDataURL(qr.content);
+      res.json({ ...qr, qrImage });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+};
+
+exports.getQRCodePNG = (req, res) => {
+  const { id } = req.params;
+
+  db.get(`SELECT * FROM qrcodes WHERE id = ?`, [id], async (err, qr) => {
+    if (err || !qr) {
+      return res.status(404).json({ error: 'QR Code not found' });
+    }
+
+    try {
+      const qrBuffer = await QRCode.toBuffer(qr.content || qr.data, { type: 'png' });
+
+      res.setHeader('Content-Type', 'image/png');
+      res.send(qrBuffer);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
   });
 };
 
