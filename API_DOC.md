@@ -23,7 +23,6 @@
 **Body**
 
 {
-  "name": "Maria",
   "email": "maria@test.com",
   "password": "123456"
 }
