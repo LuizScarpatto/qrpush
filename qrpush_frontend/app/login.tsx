@@ -41,7 +41,7 @@ export default function Login() {
   return (
     <View style={styles.container}>
 
-      <Image source={require("../assets/images/logo.png")} style={styles.logo} />
+      <Image source={require("../assets/images/logo_branca.png")} style={styles.logo} />
 
       <Text style={styles.title}>Login</Text>
       <TextInput

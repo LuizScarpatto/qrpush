@@ -25,7 +25,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Image source={require("../../assets/images/logo.png")} style={styles.logo} />
+        <Image source={require("../../assets/images/logo_branca.png")} style={styles.logo} />
         <View style={styles.headerIcons}>
           <TouchableOpacity>
             <Text style={styles.icon}>🔍</Text>
@@ -38,6 +38,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </View>
+      <View style={styles.separator} />
 
       {/* Title & Promo */}
       <Text style={styles.title}>Sua Plataforma de QR Codes</Text>
@@ -82,8 +83,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   logo: {
-    width: 100,
-    height: 40,
+    maxHeight: 60,
     resizeMode: "contain",
   },
   headerIcons: {
@@ -149,5 +149,10 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 16,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: "#ccc",
+    marginHorizontal: 24,
   },
 });
