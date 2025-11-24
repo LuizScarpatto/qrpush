@@ -1,46 +1,96 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
+  FlatList,
+  StatusBar,
   TouchableOpacity,
   StyleSheet,
   Image,
-  Alert,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { FontAwesome } from '@expo/vector-icons';
+import { apiFetch } from "../../httphelper/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function HomeScreen() {
-  const [url, setUrl] = useState("");
+  type QRCode = { id: number; url: string };
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [url, setUrl] = useState<string>("");
+  const [qrcodes, setQrcodes] = useState<QRCode[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const handleGenerate = () => {
-    if (!url) {
-      Alert.alert("Erro", "Por favor, insira uma URL.");
-      return;
-    }
-    Alert.alert("QR Code gerado!", `Destino: ${url}`);
-    // TODO: integrate with QR code generation logic
+    router.replace("/(tabs)/qrcode-create");
+  }
+
+  useEffect(() => {
+    const loadUserId = async () => {
+      const userid = await AsyncStorage.getItem("userId");
+      setUserId(userid);
+    };
+    loadUserId();
+  }, []);
+
+  useEffect(() => {
+    const fetchQRCodes = async () => {
+      if (userId == null) {
+        setQrcodes([]);
+        return;
+      }
+
+      try {
+        const res = await apiFetch(`/qrcodes/${userId}`);
+        const data: QRCode[] = await res.json();
+        setQrcodes(data);
+      } catch (err) {
+        console.error("Error fetching QR codes:", err);
+      }
+    };
+
+    fetchQRCodes();
+  }, [userId]);
+
+  const renderItem = ({ item }: { item: QRCode }) => {
+    const isSelected = item.id === selectedId;
+
+    return (
+      <TouchableOpacity
+        style={[styles.item, isSelected && styles.selectedItem]}
+        onPress={() => setSelectedId(item.id)}
+      >
+        <Text style={styles.idText}>ID: {item.id}</Text>
+        <Text style={styles.urlText}>URL: {item.url}</Text>
+      </TouchableOpacity>
+    );
   };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Image source={require("../../assets/images/logo_branca.png")} style={styles.logo} />
-        <View style={styles.headerIcons}>
-          <TouchableOpacity>
-            <Text style={styles.icon}>🔍</Text>
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Text style={styles.icon}>❓</Text>
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Text style={styles.icon}>👤</Text>
-          </TouchableOpacity>
+      <View>
+          <View style={styles.header}>
+            <Image source={require("../../assets/images/logo_branca.png")} style={styles.logo} />
+            <View style={styles.headerIcons}>
+              <TouchableOpacity>
+                <Text style={styles.icon}>
+                  <FontAwesome name="search" size={30} color="dimgray" />
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Text style={styles.icon}>
+                  <FontAwesome name="question-circle" size={30} color="dimgray" />
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Text style={styles.icon}>
+                  <FontAwesome name="user-circle" size={30} color="dimgray" />
+                </Text>
+              </TouchableOpacity>
+          </View>
         </View>
+        <View style={styles.separator} />
       </View>
-      <View style={styles.separator} />
-
-      {/* Title & Promo */}
       <Text style={styles.title}>Sua Plataforma de QR Codes</Text>
       <Text style={styles.subtitle}>
         Tenha QR Codes customizáveis e um domínio complementar
@@ -49,22 +99,21 @@ export default function HomeScreen() {
         <Text style={styles.upgradeText}>Upgrade no Plano</Text>
       </TouchableOpacity>
 
-      {/* Quick Creation */}
-      <Text style={styles.sectionTitle}>Criação rápida</Text>
-      <Text style={styles.info}>Você pode criar mais 50 QR Codes esse mês!</Text>
-      <Text style={styles.domain}>Domínio: qrpush.com</Text>
+      <View style={styles.container2}>
+        <Text style={styles.sectionTitle}>Meus QR Codes</Text>
+        <View style={styles.separator} />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Entre a URL de destino"
-        placeholderTextColor="#999"
-        value={url}
-        onChangeText={setUrl}
-        autoCapitalize="none"
+        <FlatList
+        data={qrcodes}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
+        extraData={selectedId}
       />
 
+      </View>
+
       <TouchableOpacity style={styles.generateButton} onPress={handleGenerate}>
-        <Text style={styles.generateText}>Gerar</Text>
+        <Text style={styles.generateText}>Gerar novo</Text>
       </TouchableOpacity>
     </View>
   );
@@ -72,6 +121,12 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    padding: 24,
+    gap: 30,
+    backgroundColor: "#fff",
+  },
+  container2: {
     flex: 1,
     padding: 24,
     backgroundColor: "#fff",
@@ -88,7 +143,7 @@ const styles = StyleSheet.create({
   },
   headerIcons: {
     flexDirection: "row",
-    gap: 12,
+    gap: 25,
   },
   icon: {
     fontSize: 20,
@@ -108,7 +163,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0066cc",
     padding: 10,
     borderRadius: 6,
-    alignSelf: "flex-start",
+    alignSelf: "center",
     marginBottom: 24,
   },
   upgradeText: {
@@ -153,6 +208,24 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: "#ccc",
-    marginHorizontal: 24,
+    marginHorizontal: -24,
+  },
+  item: {
+    padding: 12,
+    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+  },
+  selectedItem: {
+    backgroundColor: "#d0ebff",
+    borderColor: "#3399ff",
+  },
+  idText: {
+    fontWeight: "bold",
+    color: "#333",
+  },
+  urlText: {
+    color: "#555",
   },
 });

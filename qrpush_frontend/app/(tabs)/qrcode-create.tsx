@@ -4,38 +4,49 @@ import {
   Text, 
   TextInput, 
   TouchableOpacity, 
-  StyleSheet, 
-  Alert 
+  StyleSheet
 } from "react-native";
+import { apiFetch } from "../../httphelper/api";
+import Toast from "react-native-toast-message";
 
 export default function QrCodeCreate() {
   const [url, setUrl] = useState("");
 
   const handleGenerate = async () => {
-    if (!url.trim()) {
-      Alert.alert("Erro", "Digite uma URL válida.");
-      return;
-    }
+  if (!url.trim()) {
+    Toast.show({
+      type: "error",
+      text1: "Erro",
+      text2: "Digite uma URL válida.",
+      position: "bottom",
+    });
+    return;
+  }
 
-    try {
-      const res = await fetch("http://localhost:3000/api/qrcode/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url })
-      });
+  try {
+    const data = await apiFetch("/qrcode/create", {
+      method: "POST",
+      body: JSON.stringify({ url }),
+    });
 
-      if (!res.ok) throw new Error("Falha ao gerar QR Code");
+    Toast.show({
+      type: "success",
+      text1: "Sucesso",
+      text2: "QR Code gerado com sucesso!" + (data?.shortUrl ? ` URL: ${data.shortUrl}` : ""),
+      position: "bottom",
+    });
 
-      const data = await res.json();
+    console.log("QRCode:", data);
 
-      Alert.alert("Sucesso", "QR Code gerado com sucesso!");
-
-      console.log("QRCode:", data);
-
-    } catch (err) {
-      Alert.alert("Erro", err instanceof Error ? err.message : "Erro desconhecido");
-    }
-  };
+  } catch (err) {
+    Toast.show({
+      type: "error",
+      text1: "Erro",
+      text2: err instanceof Error ? err.message : "Erro desconhecido",
+      position: "bottom",
+    });
+  }
+};
 
   return (
     <View style={styles.container}>

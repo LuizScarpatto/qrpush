@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiFetch } from "../httphelper/api";
 
 export default function Login() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function Login() {
 
   const handleLogin = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/auth/login", {
+      const res = await apiFetch("/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -27,7 +28,8 @@ export default function Login() {
       const data = await res.json();
 
       await AsyncStorage.setItem("authToken", data.token);
-      router.replace("/(tabs)/home");
+      await AsyncStorage.setItem("userId", String(data.id));
+      router.replace("/home");
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       Alert.alert("Erro", message);
