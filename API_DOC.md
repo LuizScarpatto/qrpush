@@ -97,7 +97,7 @@
 **Imagem em png**
 
 ### GET /api/qrcode/user/:user_id
-
+ 
 [
   {
     "id": 1,
