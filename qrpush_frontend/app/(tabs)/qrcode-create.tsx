@@ -26,7 +26,7 @@ export default function QrCodeCreate() {
   try {
     const data = await apiFetch("/qrcode/create", {
       method: "POST",
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ content: url }),
     });
 
     Toast.show({

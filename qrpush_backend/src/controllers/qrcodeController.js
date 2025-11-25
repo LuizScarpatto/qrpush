@@ -49,13 +49,18 @@ exports.getQRCodePNG = (req, res) => {
   const { id } = req.params;
 
   db.get(`SELECT * FROM qrcodes WHERE id = ?`, [id], async (err, qr) => {
-    if (err || !qr) {
-      return res.status(404).json({ error: 'QR Code not found' });
+    if (err) {
+      return res.status(500).json({ error: "Database error" });
     }
+    if (!qr) {
+      return res.status(404).json({ error: "QR Code not found" });
+    }
+    if (!qr.content) {
+          return res.status(400).json({ error: "QR Code content missing" });
+        }
 
     try {
-      const qrBuffer = await QRCode.toBuffer(qr.content || qr.data, { type: 'png' });
-
+      const qrBuffer = await QRCode.toBuffer(qr.content, { type: 'png' });
       res.setHeader('Content-Type', 'image/png');
       res.send(qrBuffer);
     } catch (error) {

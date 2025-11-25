@@ -10,10 +10,10 @@ router.get(
   qrcodeController.listUserQRCodes,
 );
 
-router.get('/:id', qrcodeController.getQRCode);
+router.get('/:id', authenticateToken, qrcodeController.getQRCode);
 
-router.get('/:id/image', qrcodeController.getQRCodeImage);
+router.get('/:id/image', authenticateToken, qrcodeController.getQRCodeImage);
 
-router.get('/:id/imagepng', qrcodeController.getQRCodePNG);
+router.get('/:id/imagepng', authenticateToken, qrcodeController.getQRCodePNG);
 
 module.exports = router;

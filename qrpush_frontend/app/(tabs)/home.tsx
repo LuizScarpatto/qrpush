@@ -11,6 +11,8 @@ import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
 import { apiFetch } from "../../httphelper/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ModalScreen from "../qrCodeModal";
+import Toast from "react-native-toast-message";
 
 export default function HomeScreen() {
   type QRCode = { id: number; url: string };
@@ -18,19 +20,18 @@ export default function HomeScreen() {
   const [userId, setUserId] = useState<string | null>(null);
   const [qrcodes, setQrcodes] = useState<QRCode[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-
-  console.log("🔵 HomeScreen mounted");
+  const [modalVisible, setModalVisible] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   const handleGenerate = () => {
-    console.log("➡️ Navigating to qrcode-create");
     router.replace("/qrcode-create");
   };
-
   useEffect(() => {
     const loadUserId = async () => {
       const userid = await AsyncStorage.getItem("userId");
-      console.log("📦 Retrieved userId from AsyncStorage:", userid);
       setUserId(userid);
+      const token = await AsyncStorage.getItem("authToken");
+      setAuthToken(token);
     };
     loadUserId();
   }, []);
@@ -38,18 +39,26 @@ export default function HomeScreen() {
   useEffect(() => {
   const fetchQRCodes = async () => {
     if (userId == null) {
-      console.log("⚠️ No userId, skipping fetch");
       setQrcodes([]);
       return;
     }
 
     try {
-      console.log("🌐 Fetching QR codes for userId:", userId);
       const data: QRCode[] = await apiFetch(`/qrcode/qrcodes/${userId}`);
-      console.log("📊 Parsed QR code data:", data);
       setQrcodes(data);
+      Toast.show({
+            type: "success",
+            text1: "Sucesso",
+            text2: "QR Code gerado com sucesso!",
+            position: "bottom",
+          });
     } catch (err) {
-      console.error("❌ Error fetching QR codes:", err);
+      Toast.show({
+            type: "error",
+            text1: "Erro",
+            text2: "Erro ao recuperar qrcodes.",
+            position: "bottom",
+          });
     }
   };
 
@@ -59,14 +68,13 @@ export default function HomeScreen() {
 
   const renderItem = ({ item }: { item: QRCode }) => {
     const isSelected = item.id === selectedId;
-    console.log("🖼️ Rendering QR code item:", item);
 
     return (
       <TouchableOpacity
         style={[styles.item, isSelected && styles.selectedItem]}
         onPress={() => {
-          console.log("✔️ Selected QR code ID:", item.id);
           setSelectedId(item.id);
+          setModalVisible(true);
         }}
       >
         <Text style={styles.idText}>ID: {item.id}</Text>
@@ -124,8 +132,15 @@ export default function HomeScreen() {
       </View>
 
       <TouchableOpacity style={styles.generateButton} onPress={handleGenerate}>
-        <Text style={styles.generateText}>Gerar novo</Text>
+        <Text style={styles.generateText}>Gerar Novo QR Code</Text>
       </TouchableOpacity>
+      
+      <ModalScreen
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          qrId={selectedId}
+          token={authToken || ""}
+        />
     </View>
   );
 }
