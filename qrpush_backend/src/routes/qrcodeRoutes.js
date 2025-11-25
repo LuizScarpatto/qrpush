@@ -4,7 +4,11 @@ const qrcodeController = require('../controllers/qrcodeController');
 const authenticateToken = require('../middleware/authMiddleware');
 
 router.post('/create', authenticateToken, qrcodeController.createQRCode);
-router.get('/user/:user_id', authenticateToken, qrcodeController.listUserQRCodes);
+router.get(
+  '/qrcodes/:user_id',
+  authenticateToken,
+  qrcodeController.listUserQRCodes,
+);
 
 router.get('/:id', qrcodeController.getQRCode);
 

@@ -18,23 +18,31 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    try {
-      const res = await apiFetch("/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) throw new Error("Login failed");
-      const data = await res.json();
+  try {
+    const data = await apiFetch("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
 
-      await AsyncStorage.setItem("authToken", data.token);
-      await AsyncStorage.setItem("userId", String(data.id));
-      router.replace("/home");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      Alert.alert("Erro", message);
+    console.log("🔐 Login response:", data);
+
+    if (!data.token) {
+      throw new Error("No token returned from API");
     }
-  };
+
+    await AsyncStorage.setItem("authToken", data.token);
+    await AsyncStorage.setItem("userId", String(data.id));
+
+    console.log("💾 Saved token:", data.token);
+    console.log("💾 Saved userId:", data.id);
+
+    router.replace("/home");
+  } catch (err) {
+    console.error("❌ Login failed:", err);
+  }
+};
+
+
 
   const handleCreateAccount = () => {
     router.replace("/create-account");
